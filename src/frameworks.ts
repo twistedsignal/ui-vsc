@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import { configChangeAffects, getConfig } from "./configCompat";
 import { DIRECT_INSTANTIABLE_CLASS_NAMES } from "./data";
 
-export type FrameworkId = "react" | "roact" | "fusion" | "vide";
+export type FrameworkId = "react" | "roact" | "fusion" | "vide" | "ui";
 
 export type CallShape = "parens" | "curried";
 
@@ -64,6 +64,8 @@ export interface FrameworkSpec {
    * there is a mistake worth flagging. Defaults to false.
    */
   parentAsProp?: boolean;
+  /** This API binds an existing Instance instead of constructing one. */
+  bindsExistingInstance?: boolean;
 }
 
 export const FRAMEWORKS: Record<FrameworkId, FrameworkSpec> = {
@@ -102,9 +104,22 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkSpec> = {
     eventsAsProps: true,
     parentAsProp: true,
   },
+  ui: {
+    id: "ui",
+    aliases: ["ui.bind"],
+    callShape: "parens",
+    eventsAsProps: true,
+    bindsExistingInstance: true,
+  },
 };
 
-const ALL_FRAMEWORK_IDS: FrameworkId[] = ["react", "roact", "fusion", "vide"];
+const ALL_FRAMEWORK_IDS: FrameworkId[] = [
+  "react",
+  "roact",
+  "fusion",
+  "vide",
+  "ui",
+];
 
 // ---- Cache --------------------------------------------------------------
 
@@ -132,6 +147,7 @@ try {
       configChangeAffects(e, "roact.aliases") ||
       configChangeAffects(e, "fusion.aliases") ||
       configChangeAffects(e, "vide.aliases") ||
+      configChangeAffects(e, "ui.aliases") ||
       configChangeAffects(e, "vide.directInstanceCalls")
     ) {
       resetFrameworkCaches();

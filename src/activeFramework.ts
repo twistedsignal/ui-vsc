@@ -109,6 +109,7 @@ function ensureConfigListener(): void {
       configChangeAffects(e, "roact.aliases") ||
       configChangeAffects(e, "fusion.aliases") ||
       configChangeAffects(e, "vide.aliases") ||
+      configChangeAffects(e, "ui.aliases") ||
       configChangeAffects(e, "vide.directInstanceCalls") ||
       configChangeAffects(e, "createElementAliases")
     ) {
@@ -151,9 +152,12 @@ const REQUIRE_VIDE_RE = /require\s*\([^)\n]*\bvide\b/i;
 const REQUIRE_FUSION_RE = /require\s*\([^)\n]*\bfusion\b/i;
 const REQUIRE_REACT_RE = /require\s*\([^)\n]*\breact\b/i;
 
+const REQUIRE_UI_RE = /require\s*\([^\n]*(?:twistedsignal[/.]ui|Packages\.ui)/i;
+
 function detectFromRequires(text: string): FrameworkId | undefined {
   if (REQUIRE_ROACT_RE.test(text)) return "roact";
   if (REQUIRE_VIDE_RE.test(text)) return "vide";
+  if (REQUIRE_UI_RE.test(text)) return "ui";
   if (REQUIRE_FUSION_RE.test(text)) return "fusion";
   if (REQUIRE_REACT_RE.test(text)) return "react";
   return undefined;
@@ -235,7 +239,13 @@ export function resetDocumentDetectionCache(): void {
 
 function readOverride(): FrameworkId | undefined {
   const raw = getConfig<ActiveFrameworkChoice>("activeFramework", "auto");
-  if (raw !== "react" && raw !== "roact" && raw !== "fusion" && raw !== "vide") {
+  if (
+    raw !== "react" &&
+    raw !== "roact" &&
+    raw !== "fusion" &&
+    raw !== "vide" &&
+    raw !== "ui"
+  ) {
     return undefined;
   }
   // Cross-check against `luix.frameworks` — if the user set the
@@ -258,7 +268,13 @@ function readOverride(): FrameworkId | undefined {
  *  `auto`. */
 export function readActiveFrameworkSetting(): FrameworkId | undefined {
   const raw = getConfig<ActiveFrameworkChoice>("activeFramework", "auto");
-  if (raw === "react" || raw === "roact" || raw === "fusion" || raw === "vide") {
+  if (
+    raw === "react" ||
+    raw === "roact" ||
+    raw === "fusion" ||
+    raw === "vide" ||
+    raw === "ui"
+  ) {
     return raw;
   }
   return undefined;
@@ -291,6 +307,7 @@ export async function inferWorkspaceFramework(
     roact: 0,
     fusion: 0,
     vide: 0,
+    ui: 0,
   };
   for (const uri of sample) {
     let text: string;
@@ -310,7 +327,7 @@ export async function inferWorkspaceFramework(
   // `react` first which contradicted the per-file priority comment.
   let best: FrameworkId | undefined;
   let bestCount = 0;
-  for (const fw of ["roact", "react", "fusion", "vide"] as FrameworkId[]) {
+  for (const fw of ["roact", "react", "fusion", "vide", "ui"] as FrameworkId[]) {
     if (counts[fw] > bestCount) {
       best = fw;
       bestCount = counts[fw];

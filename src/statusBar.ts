@@ -25,6 +25,7 @@ const FRAMEWORK_LABELS: Record<FrameworkId, string> = {
   roact: "Roact",
   fusion: "Fusion",
   vide: "Vide",
+  ui: "twistedsignal/ui",
 };
 
 const SOURCE_LABELS: Record<
@@ -234,6 +235,12 @@ export async function pickActiveFrameworkCommand(): Promise<void> {
       description: describe("vide", "Force Vide snippets and completions"),
       value: "vide",
       picked: current === "vide",
+    },
+    {
+      label: `$(symbol-namespace) ${FRAMEWORK_LABELS.ui}`,
+      description: describe("ui", "Force ui.bind completions"),
+      value: "ui",
+      picked: current === "ui",
     },
   ];
   const choice = await vscode.window.showQuickPick(items, {
