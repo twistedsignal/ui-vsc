@@ -2022,6 +2022,11 @@ suite("activeFramework — detectFromRequires (1.5.0)", () => {
     assert.strictEqual(detectFromRequires(text), "fusion");
   });
 
+  test("require(...Packages.ui) → ui", () => {
+    const text = `local ui = require(ReplicatedStorage.Packages.ui)\n`;
+    assert.strictEqual(detectFromRequires(text), "ui");
+  });
+
   test("no require → undefined", () => {
     // A file with no require at all should fall through; the calls
     // path then takes over upstream of this helper.
@@ -2076,6 +2081,11 @@ suite("activeFramework — detectFromCalls (1.5.0)", () => {
     const text = `local x = Roact.createElement("Frame", { Name = "A" })`;
     const fw = detectFromCalls(text);
     assert.strictEqual(fw, "roact");
+  });
+
+  test("ui.bind(instance, { … }) → ui", () => {
+    const text = `ui.bind(ScreenGui, { Name = "A" })`;
+    assert.strictEqual(detectFromCalls(text), "ui");
   });
 
   test("no factory call → undefined", () => {
@@ -2281,6 +2291,22 @@ suite("Snippet-bag parity (1.5.0)", () => {
         videState.includes(prefix),
         `missing Vide state snippet: ${prefix}`
       );
+    }
+  });
+
+  test("twistedsignal/ui snippets cover binding, state, motion, and adapters", () => {
+    const uiState = byKindAndFramework("state", "ui").map((s) => s.prefix);
+    for (const prefix of [
+      "uibind",
+      "uivalue",
+      "uiderive",
+      "uieffect",
+      "uibatch",
+      "uispring",
+      "uitween",
+      "uiadapter",
+    ]) {
+      assert.ok(uiState.includes(prefix), `missing ui snippet: ${prefix}`);
     }
   });
 

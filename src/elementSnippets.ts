@@ -1172,6 +1172,82 @@ const SNIPPETS: LuixSnippet[] = [
     ],
   },
 
+  // ---- twistedsignal/ui bindings and reactive state ----
+  {
+    prefix: "uibind",
+    kind: "state",
+    framework: "ui",
+    description: "Bind behavior to an existing Instance",
+    body: [
+      "local ${1:cleanup} = ui.bind(${2:instance}, {",
+      "\t$0",
+      "})",
+    ],
+  },
+  {
+    prefix: "uivalue",
+    kind: "state",
+    framework: "ui",
+    description: "Create a twistedsignal/ui reactive value",
+    body: ["local ${1:value} = ui.value(${2:nil})$0"],
+  },
+  {
+    prefix: "uiderive",
+    kind: "state",
+    framework: "ui",
+    description: "Create a derived twistedsignal/ui value",
+    body: [
+      "local ${1:value} = ui.derive(function()",
+      "\treturn $0",
+      "end)",
+    ],
+  },
+  {
+    prefix: "uieffect",
+    kind: "state",
+    framework: "ui",
+    description: "Run a tracked twistedsignal/ui effect",
+    body: ["ui.effect(function()", "\t$0", "end)"],
+  },
+  {
+    prefix: "uibatch",
+    kind: "state",
+    framework: "ui",
+    description: "Batch twistedsignal/ui state changes",
+    body: ["ui.batch(function()", "\t$0", "end)"],
+  },
+  {
+    prefix: "uispring",
+    kind: "state",
+    framework: "ui",
+    description: "Create a twistedsignal/ui spring",
+    body: [
+      "local ${1:value} = ui.spring(function()",
+      "\treturn ${2:target}",
+      "end, { frequency = ${3:7}, damping = ${4:0.75} })$0",
+    ],
+  },
+  {
+    prefix: "uitween",
+    kind: "state",
+    framework: "ui",
+    description: "Create a twistedsignal/ui tween",
+    body: [
+      "local ${1:value} = ui.tween(function()",
+      "\treturn ${2:target}",
+      "end, TweenInfo.new(${3:0.2}))$0",
+    ],
+  },
+  {
+    prefix: "uiadapter",
+    kind: "state",
+    framework: "ui",
+    description: "Create a two-way Instance property adapter",
+    body: [
+      'local ${1:value} = ui.property(${2:instance}, "${3:Property}")$0',
+    ],
+  },
+
   // ---- Framework-agnostic expressions ----
   {
     prefix: "cfangles",
