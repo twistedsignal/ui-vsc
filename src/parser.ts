@@ -111,6 +111,8 @@ export interface ColorLiteral {
 export interface AliasPartition {
   parens: string[];
   curried: string[];
+  /** Parens aliases whose first argument is an existing Instance. */
+  bindingAliases?: string[];
   /** Aliases of frameworks whose `childrenLayout === "inline"` and
    *  that recognise the `parens` shape (today: Vide). When the
    *  matched alias of a parens-form call is in this set, the props
@@ -477,6 +479,41 @@ const DIRECT_PARENS_SCOPED_PATTERN =
  */
 const MAX_BACKWARD_SCAN = 16 * 1024;
 
+/** Resolve the Roblox class behind `ui.bind(target, bindings)`. */
+function inferBoundInstanceClass(
+  text: string,
+  expressionName: string,
+  callStart: number
+): string {
+  const directClass = expressionName.split(".").pop() ?? expressionName;
+  if (/^[A-Z][A-Za-z0-9_]*$/.test(directClass)) return directClass;
+
+  const identifier = /^[A-Za-z_]\w*$/.test(expressionName)
+    ? expressionName
+    : undefined;
+  if (!identifier) return "GuiObject";
+
+  const escaped = escapeRegex(identifier);
+  const prefix = text.slice(0, callStart);
+  const candidates: Array<{ index: number; className: string }> = [];
+  const patterns = [
+    new RegExp(`\\b${escaped}\\s*:\\s*([A-Z][A-Za-z0-9_]*)`, "g"),
+    new RegExp(
+      `\\b${escaped}\\s*=\\s*Instance\\.new\\s*\\(\\s*["']([A-Z][A-Za-z0-9_]*)["']`,
+      "g"
+    ),
+    new RegExp(`\\b${escaped}\\s*=.*?::\\s*([A-Z][A-Za-z0-9_]*)`, "g"),
+  ];
+  for (const pattern of patterns) {
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(prefix)) !== null) {
+      candidates.push({ index: match.index, className: match[1] });
+    }
+  }
+  candidates.sort((a, b) => b.index - a.index);
+  return candidates[0]?.className ?? "GuiObject";
+}
+
 // ============================================================================
 // findEnclosingPropsCall — used by the completion + hover providers
 // ============================================================================
@@ -555,9 +592,13 @@ export function findEnclosingPropsCall(
       const id = match[4];
       const name = dq || sq || id;
       if (name) {
+        const className = partition.bindingAliases?.includes(alias)
+          ? inferBoundInstanceClass(text, name, openBraceIdx)
+          : name;
         return {
-          className: name,
-          isStringLiteralName: !!(dq || sq),
+          className,
+          isStringLiteralName:
+            !!(dq || sq) || !!partition.bindingAliases?.includes(alias),
           alias,
           callShape: "parens",
         };
@@ -655,6 +696,29 @@ export function findEnclosingPropsCall(
         alias: name,
         callShape: "curried",
         isDirectComponentCall: true,
+      };
+    }
+  }
+
+  // A twistedsignal/ui child binding is another binding table under a
+  // named key. Its runtime class is not present in source, so retain the
+  // parent bind alias and use GuiObject's shared properties and events.
+  if (/\b[A-Za-z_]\w*\s*=\s*$/.test(before)) {
+    const parent = findEnclosingPropsCall(
+      text,
+      openBraceIdx,
+      partition,
+      directComponents
+    );
+    if (
+      parent?.alias &&
+      partition.bindingAliases?.includes(parent.alias)
+    ) {
+      return {
+        className: "GuiObject",
+        isStringLiteralName: true,
+        alias: parent.alias,
+        callShape: "parens",
       };
     }
   }
@@ -817,6 +881,9 @@ export function findEnclosingFactoryStringArg(
     }
   }
   if (!alias || !callShape) {
+    return undefined;
+  }
+  if (partition.bindingAliases?.includes(alias)) {
     return undefined;
   }
 
@@ -1715,7 +1782,11 @@ export function findAllCreateElementCalls(
 ): CreateElementCall[] {
   const partition = asPartition(aliases);
   const aliasesKey =
-    partition.parens.join("|") + " " + partition.curried.join("|");
+    partition.parens.join("|") +
+    " " +
+    partition.curried.join("|") +
+    " " +
+    (partition.bindingAliases ?? []).join("|");
   for (let i = allCallsCache.length - 1; i >= 0; i--) {
     if (
       allCallsCache[i].text === text &&
@@ -1792,6 +1863,9 @@ function findAllCreateElementCallsImpl(
       if (!classNameInfo) {
         continue;
       }
+      const resolvedClassName = partition.bindingAliases?.includes(alias)
+        ? inferBoundInstanceClass(text, classNameInfo.name, aliasStart)
+        : classNameInfo.name;
 
       const propsText = text.slice(argRanges[1].start, argRanges[1].end);
       const nameMatch = /\bName\s*=\s*"([^"\n]*)"/.exec(propsText);
@@ -1850,8 +1924,10 @@ function findAllCreateElementCallsImpl(
       }
 
       results.push({
-        className: classNameInfo.name,
-        isStringLiteralName: classNameInfo.isString,
+        className: resolvedClassName,
+        isStringLiteralName:
+          classNameInfo.isString ||
+          !!partition.bindingAliases?.includes(alias),
         nameProp,
         alias,
         aliasStart,

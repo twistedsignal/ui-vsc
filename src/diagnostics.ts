@@ -548,7 +548,13 @@ function computePropValidationDiagnostics(
     }
 
     // ---- Unknown / wrong-enum (Roblox host class only) ----
-    if (call.isStringLiteralName && defaultPropsMap[call.className]) {
+    const framework = call.alias
+      ? findFrameworkForAlias(call.alias)
+      : undefined;
+    if (
+      (call.isStringLiteralName || framework?.bindsExistingInstance) &&
+      defaultPropsMap[call.className]
+    ) {
       const known = new Set(flattenClassProps(call.className));
       // Frameworks that take events as plain table keys (Vide:
       // `Activated = function() … end`) put event names in the same
@@ -556,9 +562,6 @@ function computePropValidationDiagnostics(
       // `completion.ts`); mirror that here so they aren't flagged
       // "Unknown property" (issue #4). React/Roact/Fusion spell events
       // as computed keys, which the entry scanner never yields.
-      const framework = call.alias
-        ? findFrameworkForAlias(call.alias)
-        : undefined;
       if (framework?.eventsAsProps) {
         for (const event of flattenClassEvents(call.className)) {
           known.add(event);
@@ -595,6 +598,15 @@ function computePropValidationDiagnostics(
               out.push(d);
             }
           }
+          continue;
+        }
+        // twistedsignal/ui resolves an otherwise unknown table-valued
+        // key as a named child. The child's name is runtime data, so it
+        // cannot be validated against the Roblox class catalogue.
+        if (
+          framework?.bindsExistingInstance &&
+          propsBody.slice(entry.valueStart, entry.valueEnd).trimStart().startsWith("{")
+        ) {
           continue;
         }
         // Unknown — but skip framework-special keys.

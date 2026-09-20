@@ -192,6 +192,8 @@ export function getEnabledFrameworks(): FrameworkSpec[] {
 export interface AliasPartition {
   parens: string[];
   curried: string[];
+  /** Parens aliases whose first argument is an existing Instance. */
+  bindingAliases?: string[];
   /** Aliases of frameworks whose `childrenLayout === "inline"` and
    *  that recognise the `parens` shape. The parens-form parse path
    *  uses this to decide whether the props brace also doubles as the
@@ -211,6 +213,7 @@ export function getAliasPartition(): AliasPartition {
   const parens: string[] = [];
   const curried: string[] = [];
   const parensWithInlineChildren: string[] = [];
+  const bindingAliases: string[] = [];
   for (const framework of getEnabledFrameworks()) {
     // Frameworks default to a single recognised shape (their canonical
     // one). Vide overrides this to register its aliases in both
@@ -239,8 +242,18 @@ export function getAliasPartition(): AliasPartition {
         }
       }
     }
+    if (framework.bindsExistingInstance) {
+      for (const alias of framework.aliases) {
+        if (!bindingAliases.includes(alias)) bindingAliases.push(alias);
+      }
+    }
   }
-  _aliasPartition = { parens, curried, parensWithInlineChildren };
+  _aliasPartition = {
+    parens,
+    curried,
+    parensWithInlineChildren,
+    bindingAliases,
+  };
   return _aliasPartition;
 }
 

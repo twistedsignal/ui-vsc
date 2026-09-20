@@ -649,6 +649,7 @@ export class FactoryOpenParenCompletionProvider
     while (i >= 0 && /[A-Za-z0-9_.]/.test(text[i])) i--;
     const alias = text.slice(i + 1, end);
     if (!aliases.parens.includes(alias)) return undefined;
+    if (aliases.bindingAliases?.includes(alias)) return undefined;
     const aliasOffset = i + 1;
 
     // Suppress when this call sits at a prop-key slot of an outer

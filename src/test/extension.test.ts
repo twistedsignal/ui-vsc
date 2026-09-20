@@ -60,6 +60,44 @@ suite("buildCodeMask", () => {
 });
 
 suite("findEnclosingPropsCall", () => {
+  const UI_PARTITION = {
+    parens: ["ui.bind"],
+    curried: [],
+    bindingAliases: ["ui.bind"],
+  };
+
+  test("infers a typed target in ui.bind", () => {
+    const text = `local button: TextButton = script.Parent.Button\nui.bind(button, { | })`;
+    const cursor = text.indexOf("|");
+    const stripped = text.replace("|", "");
+    const result = findEnclosingPropsCall(stripped, cursor, UI_PARTITION);
+    assert.strictEqual(result?.className, "TextButton");
+    assert.strictEqual(result?.alias, "ui.bind");
+  });
+
+  test("infers a target created with Instance.new in ui.bind", () => {
+    const text = `local panel = Instance.new("Frame")\nui.bind(panel, { | })`;
+    const cursor = text.indexOf("|");
+    const result = findEnclosingPropsCall(
+      text.replace("|", ""),
+      cursor,
+      UI_PARTITION
+    );
+    assert.strictEqual(result?.className, "Frame");
+  });
+
+  test("recognizes nested ui.bind child tables", () => {
+    const text = `ui.bind(ScreenGui, { Panel = { | } })`;
+    const cursor = text.indexOf("|");
+    const result = findEnclosingPropsCall(
+      text.replace("|", ""),
+      cursor,
+      UI_PARTITION
+    );
+    assert.strictEqual(result?.className, "GuiObject");
+    assert.strictEqual(result?.alias, "ui.bind");
+  });
+
   test("detects simple e(\"Frame\", { ... }) call", () => {
     const result = detect(`e("Frame", { | })`);
     assert.strictEqual(result?.className, "Frame");
@@ -2246,9 +2284,9 @@ suite("Snippet-bag parity (1.5.0)", () => {
     }
   });
 
-  test("Every framework-tagged snippet sits in one of the four frameworks", () => {
+  test("Every framework-tagged snippet uses a registered framework", () => {
     // Sanity check: no typos like "react " or "Fusion" sneaking in.
-    const valid = new Set(["react", "roact", "fusion", "vide"]);
+    const valid = new Set(["react", "roact", "fusion", "vide", "ui"]);
     for (const s of SNIPPETS) {
       if (s.framework !== undefined) {
         assert.ok(
