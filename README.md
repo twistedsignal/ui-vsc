@@ -1,10 +1,10 @@
-# Luix
+# ui-vsc
 
-[![Install — VS Code Marketplace](https://img.shields.io/badge/install-VS%20Code%20Marketplace-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=ericplane.luix-roblox)
-[![GitHub stars](https://img.shields.io/github/stars/ericplane/Luix?style=flat-square&logo=github&logoColor=white&color=24292F)](https://github.com/ericplane/Luix/stargazers)
-[![License](https://img.shields.io/badge/license-MIT-3DA639?style=flat-square)](https://github.com/ericplane/Luix/blob/main/LICENSE)
+[![Install on the VS Code Marketplace](https://img.shields.io/badge/install-VS%20Code%20Marketplace-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=twistedsignal.ui-vsc)
+[![GitHub stars](https://img.shields.io/github/stars/twistedsignal/ui-vsc?style=flat-square&logo=github&logoColor=white&color=24292F)](https://github.com/twistedsignal/ui-vsc/stargazers)
+[![License](https://img.shields.io/badge/license-MIT-3DA639?style=flat-square)](https://github.com/twistedsignal/ui-vsc/blob/main/LICENSE)
 
-**All-in-one Roblox UI authoring helper for VS Code.** Luix understands
+**VS Code tooling for [twistedsignal/ui](https://github.com/twistedsignal/ui) and Roblox UI libraries.** This fork of Luix understands
 the call shapes of React-Luau, Roact, Fusion, Vide, and
 [twistedsignal/ui](https://github.com/twistedsignal/ui), and provides one consistent layer of editor
 intelligence on top: prop completion, hover docs, inlay hints, color

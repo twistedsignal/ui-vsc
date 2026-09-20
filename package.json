@@ -1,23 +1,23 @@
 {
-  "name": "luix-roblox",
-  "displayName": "Luix Roblox",
-  "description": "Roblox UI authoring helper for React-Luau, Fusion, Vide, Roact, and twistedsignal/ui.",
+  "name": "ui-vsc",
+  "displayName": "ui-vsc",
+  "description": "VS Code tooling for twistedsignal/ui, with Roblox property and event completions, diagnostics, previews, and snippets.",
   "version": "1.5.3",
-  "publisher": "ericplane",
+  "publisher": "twistedsignal",
   "icon": "assets/icon.png",
   "author": {
-    "name": "ericplane",
-    "url": "https://github.com/ericplane"
+    "name": "Twisted Signal",
+    "url": "https://github.com/twistedsignal"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ericplane/Luix.git"
+    "url": "https://github.com/twistedsignal/ui-vsc.git"
   },
   "bugs": {
-    "url": "https://github.com/ericplane/Luix/issues"
+    "url": "https://github.com/twistedsignal/ui-vsc/issues"
   },
-  "homepage": "https://github.com/ericplane/Luix#readme",
+  "homepage": "https://github.com/twistedsignal/ui-vsc#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -104,7 +104,7 @@
     "viewsWelcome": [
       {
         "view": "luix.components",
-        "contents": "No UI components found in this workspace yet.\n\nLuix lists every function that returns an `e(...)`, `New \"X\" { ... }`, or `create \"X\" { ... }` element, or that carries a `---@extends ClassName` annotation.\n\n[Create a new component](command:luix.newComponentHere)\n\n[Open the Luix documentation](https://github.com/ericplane/luix)\n\nIf you do have components but they're not appearing, they might be excluded by `luix.exclude` — check your [settings](command:workbench.action.openSettings?%22luix%22).",
+        "contents": "No UI components found in this workspace yet.\n\nLuix lists every function that returns an `e(...)`, `New \"X\" { ... }`, or `create \"X\" { ... }` element, or that carries a `---@extends ClassName` annotation.\n\n[Create a new component](command:luix.newComponentHere)\n\n[Open the ui-vsc documentation](https://github.com/twistedsignal/ui-vsc)\n\nIf you do have components but they're not appearing, they might be excluded by `luix.exclude` — check your [settings](command:workbench.action.openSettings?%22luix%22).",
         "when": "workspaceFolderCount > 0"
       },
       {
