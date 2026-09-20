@@ -267,7 +267,7 @@
             "vide",
             "ui"
           ],
-          "markdownDescription": "Which Roblox UI frameworks Luix recognizes. Disable the ones you don't use to keep completions tight. Each framework has its own call syntax — Luix picks up `e(...)` / `Roact.createElement(...)` (parens form) and `New \"X\" {...}` / `create \"X\" {...}` (curried form) accordingly. The curried form is recognised however it's written: with a scope (`New(scope, \"X\") {...}`, `scope:New \"X\" {...}`) and with the explicit parentheses StyLua and the Roblox Lua Style Guide require (`New(\"X\")({...})`).\n\nNot to be confused with `#luix.activeFramework#`: that's the *single* framework Luix targets for snippets / scaffold suggestions per file (auto-detected by default); this is the *set* of frameworks the parser is willing to recognise at all."
+          "markdownDescription": "Which Roblox UI frameworks Luix recognizes. Disable the ones you don't use to keep completions tight. Luix recognizes React and Roact element calls, Fusion and Vide constructors, and twistedsignal/ui's `ui.bind(instance, { ... })` tables. Curried Fusion and Vide calls work with scopes and with the explicit parentheses StyLua emits.\n\nNot to be confused with `#luix.activeFramework#`: that is the single framework Luix targets for snippets per file. This setting controls which frameworks the parser recognizes."
         },
         "luix.activeFramework": {
           "type": "string",
@@ -288,7 +288,7 @@
             "Force twistedsignal/ui (`ui.bind(instance, { ... })`) completions everywhere."
           ],
           "default": "auto",
-          "markdownDescription": "Which framework's snippets and completions Luix surfaces. Default `auto` picks per file in this priority order:\n\n1. This setting, if not `auto`.\n2. The file's own `require(...)` imports of `react` / `roact` / `fusion` / `vide`.\n3. The file's first factory call (`e(...)`, `New \"...\"`, `create \"...\"`, …).\n4. A workspace-wide best guess inferred from sampled indexed files.\n5. None — Luix's UI suggestions stay quiet.\n\nThe Luix status-bar item shows the current pick and clicking it flips this setting (workspace-scope when a workspace is open, global otherwise). Distinct from `#luix.frameworks#`, which controls which frameworks Luix's *parser* recognises in the first place."
+          "markdownDescription": "Which framework's snippets and completions Luix surfaces. Default `auto` checks the setting, imports, factory or bind calls, and then the workspace fallback. If none match, Luix stays quiet.\n\nThe status-bar item shows the current choice. Click it to set an override. `#luix.frameworks#` separately controls which frameworks the parser recognizes."
         },
         "luix.react.aliases": {
           "type": "array",
@@ -403,7 +403,7 @@
         "luix.snippets.state": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "When enabled (default), surface each framework's state / reactivity primitive snippets at statement positions:\n\n- **Fusion** — `value`, `computed`, `spring`, `tween`, `observer`, `forKeys`, `forValues`, `forPairs`\n- **Vide** — `source`, `derive`, `effect`, `cleanup`, `untrack`, `batch`, `show`, `switch`, `indexes`, `values`\n\nTurn off to hide just these while keeping the other Luix snippets (controlled by `#luix.snippets.enabled#`). This is the Fusion / Vide parallel to `#luix.snippets.hooks#` (React's hooks are the same category for React)."
+          "markdownDescription": "When enabled (default), show state and reactivity snippets at statement positions for Fusion, Vide, and twistedsignal/ui. The ui prefixes are `uibind`, `uivalue`, `uiderive`, `uieffect`, `uibatch`, `uispring`, `uitween`, and `uiadapter`. Turn this off to hide these while keeping other Luix snippets."
         },
         "luix.typeAwareValues": {
           "type": "boolean",

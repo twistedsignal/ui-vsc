@@ -5,8 +5,8 @@
 [![License](https://img.shields.io/badge/license-MIT-3DA639?style=flat-square)](https://github.com/ericplane/Luix/blob/main/LICENSE)
 
 **All-in-one Roblox UI authoring helper for VS Code.** Luix understands
-the call shapes of every popular Roblox UI framework — React-Luau,
-Roact, Fusion, and Vide — and provides one consistent layer of editor
+the call shapes of React-Luau, Roact, Fusion, Vide, and
+[twistedsignal/ui](https://github.com/twistedsignal/ui), and provides one consistent layer of editor
 intelligence on top: prop completion, hover docs, inlay hints, color
 preview, deprecation diagnostics, workspace-wide component inference,
 and more.
@@ -33,6 +33,13 @@ create "TextLabel" {
     -- same suggestions, plus event names (Activated, MouseEnter, …)
     -- offered as plain keys that insert a handler body
 }
+
+-- twistedsignal/ui binds behavior to Instances built in Studio
+local label: TextLabel = ScreenGui.Title
+ui.bind(label, {
+    Text = "Hello",
+    -- properties and events are suggested as plain keys
+})
 ```
 
 — Luix offers the same prop completions, the same hover docs, the same
@@ -148,14 +155,43 @@ further down.
 | **Roact** | `Roact.createElement("Frame", { … })` | 3rd argument | `[Roact.Event.X] = fn` |
 | **Fusion** | `New "Frame" { … }` | `[Children] = { … }` | `[OnEvent "X"] = fn` |
 | **Vide** | `create "Frame" { … }` | inline in same table | plain props (`X = fn`) |
+| **twistedsignal/ui** | `ui.bind(frame, { … })` | named child tables | plain keys (`X = fn`) |
 
 Toggle which frameworks Luix recognizes via `luix.frameworks` (default:
-all four). Override the factory aliases per-framework via
+all five). Override the factory or bind aliases per-framework via
 `luix.<framework>.aliases` — useful if your codebase aliases the factory
 locally, e.g. `local r = React.createElement` or `local n = Fusion.New`.
 
 The first argument can be a string (`"TextLabel"`) or an identifier
 (`MyButton`, `Components.Button`) — Luix handles both.
+
+### Binding existing UI with twistedsignal/ui
+
+`ui.bind` does not create Instances. Luix reads the bound Instance's class
+from a Luau type annotation or a nearby `Instance.new` assignment:
+
+```lua
+local button: TextButton = ScreenGui.Panel.Toggle
+
+ui.bind(button, {
+    Text = "Open",
+    Activated = function()
+        -- event handler
+    end,
+    Icon = {
+        Image = "rbxassetid://0",
+    },
+})
+```
+
+The root table gets `TextButton` properties and events. Named child tables
+get the common `GuiObject` set because a child's runtime class is not present
+in the binding syntax. If Luix cannot infer the root class, it uses the same
+`GuiObject` fallback. Type annotations give the most precise results.
+
+The `uibind`, `uivalue`, `uiderive`, `uieffect`, `uibatch`, `uispring`,
+`uitween`, and `uiadapter` snippets cover the library's binding, state,
+motion, and property-adapter APIs.
 
 ### Curried calls: every spelling works
 
@@ -215,7 +251,7 @@ get a snippet wired up with tab stops:
 | `Text` | `Text = "",` *(cursor inside the quotes)* |
 | `HorizontalAlignment` | `HorizontalAlignment = Enum.HorizontalAlignment.,` |
 
-Works identically across all four frameworks. Toggle with
+Works identically across all supported frameworks. Toggle with
 `luix.typeAwareValues`.
 
 Color3 placeholders honour **`luix.color3.defaultFormat`** — pick
@@ -1122,7 +1158,7 @@ All settings live under the `luix.*` prefix. Open `Cmd+,` and search
 ```jsonc
 {
   // Toggle which frameworks Luix scans for.
-  "luix.frameworks": ["react", "roact", "fusion", "vide"],
+  "luix.frameworks": ["react", "roact", "fusion", "vide", "ui"],
 
   // Override per-framework factory aliases (leave empty to use defaults).
   "luix.react.aliases":   [],  // defaults: ["e", "createElement", "React.createElement"]
