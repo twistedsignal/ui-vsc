@@ -98,6 +98,24 @@ suite("findEnclosingPropsCall", () => {
     assert.strictEqual(result?.alias, "ui.bind");
   });
 
+  test("resolves an opted-in ui create wrapper as a constructor", () => {
+    const partition = {
+      parens: ["ui.bind", "create"],
+      curried: [],
+      bindingAliases: ["ui.bind"],
+    };
+    const text = `create("Highlight", { OutlineTransparency = 0, | })`;
+    const cursor = text.indexOf("|");
+    const result = findEnclosingPropsCall(
+      text.replace("|", ""),
+      cursor,
+      partition
+    );
+    assert.strictEqual(result?.className, "Highlight");
+    assert.strictEqual(result?.alias, "create");
+    assert.strictEqual(result?.isStringLiteralName, true);
+  });
+
   test("detects simple e(\"Frame\", { ... }) call", () => {
     const result = detect(`e("Frame", { | })`);
     assert.strictEqual(result?.className, "Frame");
@@ -300,6 +318,17 @@ suite("renderTypeSnippet", () => {
 });
 
 suite("Class hierarchy", () => {
+  test("Highlight has the properties used by ui create wrappers", () => {
+    const props = _testing.flattenClassProps("Highlight");
+    assert.ok(props.includes("OutlineTransparency"));
+    assert.ok(props.includes("FillTransparency"));
+    assert.ok(props.includes("Adornee"));
+    assert.strictEqual(
+      _testing.getPropType("Highlight", "DepthMode"),
+      "Enum.HighlightDepthMode"
+    );
+  });
+
   test("GuiObject base exists and has core props", () => {
     const gui = _testing.classHierarchy.GuiObject;
     assert.ok(gui, "GuiObject should be defined");
@@ -1912,11 +1941,8 @@ suite("Direct instance-call detection (Vide)", () => {
     assert.strictEqual(result?.isDirectComponentCall, true);
   });
 
-  test("does NOT fire on `Camera({ | })` (non-UI class not in the set)", () => {
-    // The allowlist is UI-only; non-UI Roblox class names like Camera,
-    // Sound, Tween, Workspace are deliberately absent so a local
-    // variable with one of those names can't accidentally trigger.
-    const text = `Camera({ | })`;
+  test("does NOT fire on `Workspace({ | })` (NotCreatable)", () => {
+    const text = `Workspace({ | })`;
     const cursor = text.indexOf("|");
     const stripped = text.replace("|", "");
     const result = findEnclosingPropsCall(
@@ -1948,9 +1974,7 @@ suite("Direct instance-call detection (Vide)", () => {
     assert.strictEqual(result?.isDirectComponentCall, true);
   });
 
-  test("DIRECT_INSTANTIABLE_CLASS_NAMES excludes abstract bases", () => {
-    // Smoke-test the curated allowlist: concrete UI classes present,
-    // abstract bases absent.
+  test("DIRECT_INSTANTIABLE_CLASS_NAMES follows API-dump creatability", () => {
     const { DIRECT_INSTANTIABLE_CLASS_NAMES } = require("../data");
     const set: ReadonlySet<string> = DIRECT_INSTANTIABLE_CLASS_NAMES;
     // Concrete — should be there.
@@ -1959,18 +1983,34 @@ suite("Direct instance-call detection (Vide)", () => {
     assert.ok(set.has("ScrollingFrame"));
     assert.ok(set.has("UIPadding"));
     assert.ok(set.has("UICorner"));
+    assert.ok(set.has("Part"));
+    assert.ok(set.has("Sound"));
+    assert.ok(set.has("Camera"));
     // Abstract — should NOT be there.
     assert.ok(!set.has("Instance"));
     assert.ok(!set.has("GuiBase2d"));
     assert.ok(!set.has("GuiObject"));
     assert.ok(!set.has("GuiButton"));
     assert.ok(!set.has("UILayout"));
-    // Non-UI — should NOT be there (defensive; Luix's classHierarchy
-    // doesn't model them anyway).
-    assert.ok(!set.has("Camera"));
-    assert.ok(!set.has("Sound"));
-    assert.ok(!set.has("Tween"));
     assert.ok(!set.has("Workspace"));
+  });
+
+  test("generated non-UI classes expose writable inherited properties", () => {
+    const part = _testing.flattenClassProps("Part");
+    assert.ok(part.includes("Anchored"));
+    assert.ok(part.includes("CFrame"));
+    assert.ok(part.includes("Transparency"));
+
+    const sound = _testing.flattenClassProps("Sound");
+    assert.ok(sound.includes("SoundId"));
+    assert.ok(sound.includes("Volume"));
+    assert.ok(sound.includes("PlaybackSpeed"));
+  });
+
+  test("Highlight uses DepthMode rather than a nonexistent AlwaysOnTop prop", () => {
+    const highlight = _testing.flattenClassProps("Highlight");
+    assert.ok(highlight.includes("DepthMode"));
+    assert.ok(!highlight.includes("AlwaysOnTop"));
   });
 });
 
@@ -2024,6 +2064,11 @@ suite("activeFramework — detectFromRequires (1.5.0)", () => {
 
   test("require(...Packages.ui) → ui", () => {
     const text = `local ui = require(ReplicatedStorage.Packages.ui)\n`;
+    assert.strictEqual(detectFromRequires(text), "ui");
+  });
+
+  test("require a vendored ui path → ui", () => {
+    const text = `local ui = require("@shared/vendor/ui")\n`;
     assert.strictEqual(detectFromRequires(text), "ui");
   });
 

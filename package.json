@@ -2,7 +2,7 @@
   "name": "ui-vsc",
   "displayName": "ui-vsc",
   "description": "VS Code tooling for twistedsignal/ui, with Roblox property and event completions, diagnostics, previews, and snippets.",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "publisher": "twistedsignal",
   "icon": "assets/icon.png",
   "author": {
@@ -330,10 +330,18 @@
           "default": [],
           "markdownDescription": "Override the twistedsignal/ui bind aliases (`ui.bind`). Leave empty to use the default."
         },
+        "luix.ui.createAliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Opt into parens-style wrappers that create an Instance and pass a twistedsignal/ui binding table, such as `create(\"Highlight\", { Adornee = target })`. Luix provides class-name, property, and event completions for these calls. This setting is ignored while `vide` is enabled in `#luix.frameworks#`, because Vide owns the same `create` alias."
+        },
         "luix.vide.directInstanceCalls": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "When **Vide** is in `#luix.frameworks#`, recognize Vide's bare-call shape for built-in Roblox UI classes — `Frame({ Size = … })`, `TextButton({ Activated = … })`, `ScrollingFrame { … }`, etc. — and surface the matching class's prop + event completions inside the table.\n\nThe class allowlist is the same set Luix already has prop data for (Frame, ScrollingFrame, TextLabel, TextButton, ImageLabel, ImageButton, ScreenGui, BillboardGui, every `UI*` constraint / layout / decorator …), minus the abstract bases (`GuiObject`, `GuiButton`, `Instance`). Non-UI Roblox class names (`Camera`, `Sound`, `Tween`, `Workspace`, …) are deliberately *not* in the set — Luix doesn't have prop data for them and they're common local-variable names.\n\nWorkspace components always shadow built-in class names: if you've defined your own `local function Frame(props)` somewhere, *that* component's declared props win over Roblox's `Frame`.\n\nDisable if you have local variables named after UI classes that you call with a table for unrelated reasons."
+          "markdownDescription": "When **Vide** is in `#luix.frameworks#`, recognize Vide's bare-call shape for Roblox classes that scripts can construct — `Frame({ Size = … })`, `Sound({ Volume = … })`, etc. — and surface the matching class's property and event completions inside the table. The class list comes from the bundled Roblox API dump and excludes hidden and `NotCreatable` classes.\n\nWorkspace components always shadow built-in class names: if you've defined your own `local function Frame(props)` somewhere, *that* component's declared props win over Roblox's `Frame`.\n\nDisable if your project calls local variables named after Roblox classes with unrelated tables."
         },
         "luix.props": {
           "type": "object",
@@ -696,7 +704,7 @@
         "luix.useRobloxApiDump": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "When enabled, fetches the community-maintained Roblox API dump and merges any *additional* properties it reports for classes Luix already knows about into the in-memory prop map. Cached on disk for 24 hours; the dump is additive only (built-in props always win on conflicts) so a stale or partial fetch never breaks existing completions. Off by default because the hand-curated built-in data is reliable and works offline."
+          "markdownDescription": "When enabled, fetches the latest community-maintained Roblox API dump and merges newly shipped writable properties into the bundled class data. Cached for 24 hours and additive only. The extension already ships a generated offline snapshot containing every API-dump class, so this setting is only for properties added after the installed release."
         },
         "luix.spacing": {
           "type": "object",

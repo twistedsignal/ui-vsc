@@ -12,7 +12,7 @@ import * as vscode from "vscode";
 const UNKNOWN_PROP = "luix.unknown-prop";
 
 async function activateExtension(): Promise<void> {
-  const ext = vscode.extensions.getExtension("ericplane.luix-roblox");
+  const ext = vscode.extensions.getExtension("twistedsignal.ui-vsc");
   assert.ok(ext, "luix extension not found in the test host");
   await ext!.activate();
 }
@@ -126,6 +126,12 @@ async function luixCompletions(
 
 function labelOf(item: vscode.CompletionItem): string {
   return typeof item.label === "string" ? item.label : item.label.label;
+}
+
+async function updateLuixSetting(key: string, value: unknown): Promise<void> {
+  await vscode.workspace
+    .getConfiguration("luix")
+    .update(key, value, vscode.ConfigurationTarget.Global);
 }
 
 // ============================================================================
@@ -704,6 +710,63 @@ suite("e2e completion — event items and Parent", () => {
     assert.strictEqual(labels[0], "Activated", "GuiButton's own events lead");
     assert.ok(labels.indexOf("MouseEnter") < labels.indexOf("Destroying"));
     assert.strictEqual(items[0].detail, "TextButton event");
+  });
+});
+
+suite("e2e completion — twistedsignal/ui create wrappers", () => {
+  let originalFrameworks: unknown;
+  let originalCreateAliases: unknown;
+  let originalActiveFramework: unknown;
+
+  suiteSetup(async () => {
+    const config = vscode.workspace.getConfiguration("luix");
+    originalFrameworks = config.inspect("frameworks")?.globalValue;
+    originalCreateAliases = config.inspect("ui.createAliases")?.globalValue;
+    originalActiveFramework = config.inspect("activeFramework")?.globalValue;
+    await updateLuixSetting("frameworks", ["ui"]);
+    await updateLuixSetting("ui.createAliases", ["create"]);
+    await updateLuixSetting("activeFramework", "ui");
+  });
+
+  suiteTeardown(async () => {
+    await updateLuixSetting("frameworks", originalFrameworks);
+    await updateLuixSetting("ui.createAliases", originalCreateAliases);
+    await updateLuixSetting("activeFramework", originalActiveFramework);
+  });
+
+  test("offers Highlight properties inside an opted-in create call", async () => {
+    const items = await luixCompletions(
+      [
+        'local ui = require("@shared/vendor/ui")',
+        'create("Highlight", {',
+        "  |",
+        "})",
+      ].join("\n"),
+      "Highlight"
+    );
+    const labels = new Set(items.map(labelOf));
+    assert.ok(labels.has("OutlineTransparency"));
+    assert.ok(labels.has("FillTransparency"));
+    assert.ok(labels.has("Adornee"));
+
+    const partItems = await luixCompletions(
+      ['create("Part", {', "  |", "})"].join("\n"),
+      "Part"
+    );
+    const partLabels = new Set(partItems.map(labelOf));
+    assert.ok(partLabels.has("Anchored"));
+    assert.ok(partLabels.has("CFrame"));
+    assert.ok(partLabels.has("Transparency"));
+  });
+
+  test("ignores ui create aliases when Vide is enabled", async () => {
+    await updateLuixSetting("frameworks", ["vide", "ui"]);
+    await updateLuixSetting("ui.createAliases", ["make"]);
+    const items = await luixCompletions(
+      ['make("Highlight", {', "  |", "})"].join("\n"),
+      "Highlight"
+    );
+    assert.deepStrictEqual(items, []);
   });
 });
 

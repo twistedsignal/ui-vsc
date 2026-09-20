@@ -155,7 +155,7 @@ further down.
 | **Roact** | `Roact.createElement("Frame", { … })` | 3rd argument | `[Roact.Event.X] = fn` |
 | **Fusion** | `New "Frame" { … }` | `[Children] = { … }` | `[OnEvent "X"] = fn` |
 | **Vide** | `create "Frame" { … }` | inline in same table | plain props (`X = fn`) |
-| **twistedsignal/ui** | `ui.bind(frame, { … })` | named child tables | plain keys (`X = fn`) |
+| **twistedsignal/ui** | `ui.bind(frame, { … })` or an opted-in `create("Frame", { … })` wrapper | named child tables | plain keys (`X = fn`) |
 
 Toggle which frameworks Luix recognizes via `luix.frameworks` (default:
 all five). Override the factory or bind aliases per-framework via
@@ -192,6 +192,45 @@ in the binding syntax. If Luix cannot infer the root class, it uses the same
 The `uibind`, `uivalue`, `uiderive`, `uieffect`, `uibatch`, `uispring`,
 `uitween`, and `uiadapter` snippets cover the library's binding, state,
 motion, and property-adapter APIs.
+
+#### Custom `create` wrappers
+
+Projects that wrap `Instance.new` and `ui.bind` can opt into constructor
+completion without making Luix treat the wrapper as Vide. Configure the
+workspace like this:
+
+```json
+{
+  "luix.frameworks": ["ui"],
+  "luix.ui.createAliases": ["create"]
+}
+```
+
+Vide must be absent from `luix.frameworks`. Luix ignores
+`luix.ui.createAliases` while Vide is enabled because both libraries commonly
+use the name `create`. The setting is empty by default.
+
+With that opt-in, the class name and binding table both use Roblox class data:
+
+```lua
+create("Highlight", {
+    OutlineTransparency = spring(self.HighlightTransparency, config),
+    FillTransparency = 0.5,
+    Adornee = self.Holder.Button,
+})
+```
+
+Luix offers `Highlight` after `create(` and properties such as
+`OutlineTransparency`, `FillTransparency`, and `Adornee` inside the table.
+`Highlight` uses `DepthMode = Enum.HighlightDepthMode.AlwaysOnTop`; Roblox does
+not define an `AlwaysOnTop` property on that class.
+
+The same path works for every non-hidden class that the Roblox API dump marks
+as creatable. For example, `create("Part", { ... })` completes writable
+`BasePart` and `Part` properties, while `create("Sound", { ... })` completes
+`SoundId`, `Volume`, `PlaybackSpeed`, and the rest of `Sound`'s writable API.
+Hidden, read-only, deprecated, and non-scriptable properties stay out of the
+list.
 
 ### Curried calls: every spelling works
 
@@ -1225,12 +1264,11 @@ All settings live under the `luix.*` prefix. Open `Cmd+,` and search
   parsed component index across sessions; unchanged files skip
   re-parsing on cold start. No behavioral difference; speeds up
   activation on large workspaces. Disable to keep Luix offline.
-- **`luix.useRobloxApiDump`** (default `false`) — fetch the
-  community-maintained Mini-API-Dump once a day and *add* any new
-  properties Roblox has shipped to the existing completion lists.
-  Additive only — the hand-curated built-in data still wins on
-  conflicts so a stale or partial fetch never breaks existing
-  completions.
+- **`luix.useRobloxApiDump`** (default `false`) — fetch the latest
+  community-maintained Mini-API-Dump once a day and add writable properties
+  shipped after this extension release. ui-vsc already bundles an offline,
+  generated snapshot with every Roblox class. The network fetch is additive,
+  so a stale or partial response cannot remove built-in completions.
 
 ---
 

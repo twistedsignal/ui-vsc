@@ -3,6 +3,12 @@
 // Nothing in this file imports from `vscode`; it's safe to consume from
 // tests without spinning up the extension host.
 
+import {
+  GENERATED_CLASS_HIERARCHY,
+  GENERATED_CREATABLE_CLASS_NAMES,
+  GENERATED_PROP_TYPES,
+} from "./robloxApiData";
+
 // ============================================================================
 // Roblox class hierarchy
 // ============================================================================
@@ -43,6 +49,19 @@ export const classHierarchy: Record<string, ClassDef> = {
       "DescendantRemoving",
       "Destroying",
       "StyledPropertiesChanged",
+    ],
+  },
+
+  Highlight: {
+    inherits: "Instance",
+    own: [
+      "Adornee",
+      "DepthMode",
+      "Enabled",
+      "FillColor",
+      "FillTransparency",
+      "OutlineColor",
+      "OutlineTransparency",
     ],
   },
 
@@ -503,6 +522,40 @@ export const classHierarchy: Record<string, ClassDef> = {
   },
 };
 
+// The hand-maintained entries above carry a few useful grouping classes and
+// ordering choices. The generated dump fills their missing members and adds
+// every other Roblox class, including non-creatable bases needed for inherited
+// properties.
+for (const [name, generated] of Object.entries(GENERATED_CLASS_HIERARCHY)) {
+  const current = classHierarchy[name];
+  if (!current) {
+    classHierarchy[name] = {
+      inherits: generated.inherits,
+      own: [...generated.own],
+      events: generated.events ? [...generated.events] : undefined,
+    };
+    continue;
+  }
+  current.inherits ??= generated.inherits;
+  const own = new Set(current.own);
+  for (const prop of generated.own) {
+    if (!own.has(prop)) {
+      current.own.push(prop);
+      own.add(prop);
+    }
+  }
+  if (generated.events) {
+    current.events ??= [];
+    const events = new Set(current.events);
+    for (const event of generated.events) {
+      if (!events.has(event)) {
+        current.events.push(event);
+        events.add(event);
+      }
+    }
+  }
+}
+
 // Memoized; the hierarchy is static, so the result for a given class never
 // changes. Callers must treat the returned array as immutable.
 const propsCache = new Map<string, string[]>();
@@ -725,30 +778,13 @@ export const defaultPropsMap: Record<string, string[]> = Object.fromEntries(
   Object.keys(classHierarchy).map((name) => [name, flattenClassProps(name)]),
 );
 
-// Abstract / intermediate classes Roblox doesn't let you `Instance.new(...)`.
-// Used to filter the hierarchy down to the names users can actually
-// construct directly (Vide's `Frame({...})` idiom).
-const ABSTRACT_CLASS_NAMES: ReadonlySet<string> = new Set([
-  "Instance",
-  "GuiBase2d",
-  "GuiObject",
-  "GuiButton",
-  // Luix-internal grouping under which UIListLayout / UIGridLayout / …
-  // share `FillDirection` etc. Not a real Roblox class.
-  "UILayout",
-]);
-
 /**
- * Roblox UI class names that Vide users can call directly as functions —
- * `Frame({ Size = … })`, `TextButton({ Activated = … })`, etc. This is the
- * full hierarchy minus the small handful of abstract / synthetic bases
- * that aren't constructible. Naturally limited to GUI types because the
- * extension's `classHierarchy` only contains GUI types — no `Camera`,
- * `Sound`, `Tween`, etc., so the allowlist can't accidentally fire on a
- * local variable named after a non-UI Roblox class.
+ * Every class the current Roblox API dump allows scripts to construct.
+ * Hidden and `NotCreatable` classes stay in the hierarchy for inheritance,
+ * but never appear as constructor targets.
  */
 export const DIRECT_INSTANTIABLE_CLASS_NAMES: ReadonlySet<string> = new Set(
-  Object.keys(classHierarchy).filter((name) => !ABSTRACT_CLASS_NAMES.has(name)),
+  GENERATED_CREATABLE_CLASS_NAMES,
 );
 
 /**
@@ -792,9 +828,11 @@ export const PROP_TYPES: Record<string, string> = {
   Ambient: "Color3",
   BackgroundColor3: "Color3",
   BorderColor3: "Color3",
+  FillColor: "Color3",
   GroupColor3: "Color3",
   ImageColor3: "Color3",
   LightColor: "Color3",
+  OutlineColor: "Color3",
   PlaceholderColor3: "Color3",
   ScrollBarImageColor3: "Color3",
   TextColor3: "Color3",
@@ -855,6 +893,7 @@ export const PROP_TYPES: Record<string, string> = {
   DistanceStep: "number",
   DistanceUpperLimit: "number",
   FillDirectionMaxCells: "number",
+  FillTransparency: "number",
   GroupTransparency: "number",
   GrowRatio: "number",
   ImageTransparency: "number",
@@ -866,6 +905,7 @@ export const PROP_TYPES: Record<string, string> = {
   MaxVisibleGraphemes: "number",
   MinTextSize: "number",
   PixelsPerStud: "number",
+  OutlineTransparency: "number",
   RollOffMaxDistance: "number",
   RollOffMinDistance: "number",
   Rotation: "number",
@@ -1019,6 +1059,9 @@ export const PROP_TYPES: Record<string, string> = {
 // — the closest ancestor wins, so leaf-level overrides take precedence.
 // ============================================================================
 export const PROP_TYPE_OVERRIDES: Record<string, Record<string, string>> = {
+  Highlight: {
+    DepthMode: "Enum.HighlightDepthMode",
+  },
   Frame: {
     Style: "Enum.FrameStyle",
   },
@@ -1078,6 +1121,11 @@ export function getPropType(
       const override = PROP_TYPE_OVERRIDES[cls]?.[propName];
       if (override !== undefined) {
         result = override;
+        break;
+      }
+      const generated = GENERATED_PROP_TYPES[cls]?.[propName];
+      if (generated !== undefined) {
+        result = generated;
         break;
       }
       cls = classHierarchy[cls]?.inherits;

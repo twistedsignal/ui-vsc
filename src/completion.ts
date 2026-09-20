@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import {
   ANNOTATION_TYPE_HINTS,
   classHierarchy,
+  DIRECT_INSTANTIABLE_CLASS_NAMES,
   getPropType,
   defaultPropsMap,
   flattenClassEvents,
@@ -480,20 +481,7 @@ export class ClassNameCompletionProvider
   }
 }
 
-// Synthetic intermediate classes (Instance, GuiBase2d, GuiObject,
-// GuiButton, UILayout) exist in the hierarchy for prop inheritance only —
-// you can't actually pass them as a factory's first arg, so hide them.
-const SYNTHETIC_CLASSES = new Set([
-  "Instance",
-  "GuiBase2d",
-  "GuiObject",
-  "GuiButton",
-  "UILayout",
-]);
-
-const INSERTABLE_CLASS_NAMES = Object.keys(defaultPropsMap)
-  .filter((name) => !SYNTHETIC_CLASSES.has(name))
-  .sort();
+const INSERTABLE_CLASS_NAMES = [...DIRECT_INSTANTIABLE_CLASS_NAMES].sort();
 
 /**
  * From a `findEnclosingFactoryStringArg` context, walk back through

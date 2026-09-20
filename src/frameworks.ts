@@ -22,6 +22,8 @@ export interface FrameworkSpec {
   id: FrameworkId;
   /** Function-name aliases used to construct elements. */
   aliases: string[];
+  /** Optional parens-style wrappers that construct an Instance before binding it. */
+  constructorAliases?: string[];
   /**
    * Canonical call shape — what the framework's own documentation
    * uses, and what Luix emits when generating snippet bodies /
@@ -148,6 +150,7 @@ try {
       configChangeAffects(e, "fusion.aliases") ||
       configChangeAffects(e, "vide.aliases") ||
       configChangeAffects(e, "ui.aliases") ||
+      configChangeAffects(e, "ui.createAliases") ||
       configChangeAffects(e, "vide.directInstanceCalls")
     ) {
       resetFrameworkCaches();
@@ -173,13 +176,21 @@ export function getEnabledFrameworks(): FrameworkSpec[] {
       )
     : ALL_FRAMEWORK_IDS;
 
+  const videEnabled = ids.includes("vide");
   _enabledFrameworks = ids.map((id) => {
     const base = FRAMEWORKS[id];
     const override = getConfig<string[]>(`${id}.aliases`, []);
-    if (Array.isArray(override) && override.length > 0) {
-      return { ...base, aliases: override };
+    const aliases = Array.isArray(override) && override.length > 0
+      ? override
+      : base.aliases;
+    if (id === "ui") {
+      const configured = getConfig<string[]>("ui.createAliases", []);
+      const constructorAliases = !videEnabled && Array.isArray(configured)
+        ? configured.filter((alias) => alias.trim().length > 0)
+        : [];
+      return { ...base, aliases, constructorAliases };
     }
-    return base;
+    return aliases === base.aliases ? base : { ...base, aliases };
   });
   return _enabledFrameworks;
 }
@@ -230,6 +241,11 @@ export function getAliasPartition(): AliasPartition {
         }
       }
     }
+    for (const alias of framework.constructorAliases ?? []) {
+      if (!parens.includes(alias)) {
+        parens.push(alias);
+      }
+    }
     // Only frameworks whose parens form actually carries inline
     // children (Vide) qualify — scoping by the spec, not just bucket
     // membership, so a cross-framework alias collision (e.g. a user
@@ -266,6 +282,9 @@ export function findFrameworkForAlias(
   alias: string
 ): FrameworkSpec | undefined {
   for (const framework of getEnabledFrameworks()) {
+    if (framework.constructorAliases?.includes(alias)) {
+      return framework;
+    }
     if (framework.aliases.includes(alias)) {
       return framework;
     }
@@ -274,7 +293,7 @@ export function findFrameworkForAlias(
 }
 
 /**
- * Built-in Roblox UI class names that should be recognised as targets
+ * Built-in Roblox class names that should be recognised as targets
  * of Vide's bare-call shape — `Frame({ Size = … })`,
  * `TextButton({ Activated = … })`, etc. Gated by:
  *
@@ -286,8 +305,8 @@ export function findFrameworkForAlias(
  *
  * Returns undefined when the feature shouldn't apply, so callers can
  * skip the union with workspace components entirely. When applicable,
- * the returned set is the curated UI-only allowlist from `data.ts`
- * (no `Camera`, `Sound`, `Tween`, `Workspace`, …). Memoised.
+ * the returned set comes from the bundled Roblox API dump and excludes
+ * hidden and `NotCreatable` classes. Memoised.
  */
 export function getDirectInstanceClassNames(): ReadonlySet<string> | undefined {
   if (_directInstanceClasses !== undefined) {

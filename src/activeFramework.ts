@@ -110,6 +110,7 @@ function ensureConfigListener(): void {
       configChangeAffects(e, "fusion.aliases") ||
       configChangeAffects(e, "vide.aliases") ||
       configChangeAffects(e, "ui.aliases") ||
+      configChangeAffects(e, "ui.createAliases") ||
       configChangeAffects(e, "vide.directInstanceCalls") ||
       configChangeAffects(e, "createElementAliases")
     ) {
@@ -152,7 +153,8 @@ const REQUIRE_VIDE_RE = /require\s*\([^)\n]*\bvide\b/i;
 const REQUIRE_FUSION_RE = /require\s*\([^)\n]*\bfusion\b/i;
 const REQUIRE_REACT_RE = /require\s*\([^)\n]*\breact\b/i;
 
-const REQUIRE_UI_RE = /require\s*\([^\n]*(?:twistedsignal[/.]ui|Packages\.ui)/i;
+const REQUIRE_UI_RE =
+  /require\s*\([^\n]*(?:twistedsignal[/.]ui|Packages\.ui|["'][^"'\n]*(?:\/|@)ui["'])/i;
 
 function detectFromRequires(text: string): FrameworkId | undefined {
   if (REQUIRE_ROACT_RE.test(text)) return "roact";

@@ -4,6 +4,36 @@ All notable changes to **Luix** will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.5.4]
+
+### Optional twistedsignal/ui constructor wrappers
+
+The new `luix.ui.createAliases` setting recognizes project helpers such as
+`create("Highlight", { ... })` as twistedsignal/ui constructors. These calls
+get class-name, property, event, diagnostic, preview, and editor support from
+the same paths as the built-in framework factories.
+
+The setting only applies when Vide is absent from `luix.frameworks`. Both APIs
+commonly use `create`, so Luix refuses to guess while Vide is enabled. The
+setting is empty by default.
+
+Vendored imports such as `require("@shared/vendor/ui")` now select the UI
+framework during per-file detection. `Highlight` and its Roblox properties
+are also included in the bundled class data.
+
+### Full creatable Roblox class data
+
+The extension now bundles generated data from Roblox Client Tracker's
+Mini-API-Dump. Constructor completion includes every class that is neither
+hidden nor tagged `NotCreatable`, including `Part`, `Sound`, `Camera`, effects,
+constraints, and UI instances. Property and event completion follows each
+class's inheritance chain.
+
+Property suggestions only include members that normal scripts can write. The
+generator removes hidden, read-only, deprecated, and non-scriptable members.
+Non-creatable classes remain available internally so inherited properties
+still resolve, but they do not appear in class-name completion.
+
 ## [1.5.3]
 
 ### Vide events are no longer flagged as unknown props ([#4](https://github.com/ericplane/Luix/issues/4))
