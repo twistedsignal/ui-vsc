@@ -3152,9 +3152,10 @@ suite("sortProps — event keys come from the class hierarchy (1.5.3)", () => {
 });
 
 suite("Framework spec — parentAsProp (1.5.3)", () => {
-  test("Fusion and Vide take Parent as a table key; React and Roact do not", () => {
+  test("Fusion, Vide, and ui take Parent as a table key; React and Roact do not", () => {
     assert.strictEqual(FRAMEWORKS.fusion.parentAsProp, true);
     assert.strictEqual(FRAMEWORKS.vide.parentAsProp, true);
+    assert.strictEqual(FRAMEWORKS.ui.parentAsProp, true);
     assert.ok(!FRAMEWORKS.react.parentAsProp);
     assert.ok(!FRAMEWORKS.roact.parentAsProp);
   });

@@ -4,6 +4,14 @@ All notable changes to **Luix** will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.5.5]
+
+### Parent bindings in twistedsignal/ui
+
+`Parent` is now accepted and completed inside `ui.bind(...)` and configured UI
+constructor wrappers. The previous special-case diagnostic incorrectly called
+the wrapper React even when `create` belonged to twistedsignal/ui.
+
 ## [1.5.4]
 
 ### Optional twistedsignal/ui constructor wrappers

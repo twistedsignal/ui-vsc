@@ -111,6 +111,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkSpec> = {
     aliases: ["ui.bind"],
     callShape: "parens",
     eventsAsProps: true,
+    parentAsProp: true,
     bindsExistingInstance: true,
   },
 };

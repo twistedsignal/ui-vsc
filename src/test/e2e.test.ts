@@ -748,6 +748,7 @@ suite("e2e completion — twistedsignal/ui create wrappers", () => {
     assert.ok(labels.has("OutlineTransparency"));
     assert.ok(labels.has("FillTransparency"));
     assert.ok(labels.has("Adornee"));
+    assert.ok(labels.has("Parent"));
 
     const partItems = await luixCompletions(
       ['create("Part", {', "  |", "})"].join("\n"),
@@ -757,6 +758,11 @@ suite("e2e completion — twistedsignal/ui create wrappers", () => {
     assert.ok(partLabels.has("Anchored"));
     assert.ok(partLabels.has("CFrame"));
     assert.ok(partLabels.has("Transparency"));
+
+    const diagnostics = await luixDiagnostics(
+      ['create("Highlight", {', "  Parent = self.Holder.Button,", "})"].join("\n")
+    );
+    assert.deepStrictEqual(unknownPropKeys(diagnostics), []);
   });
 
   test("ignores ui create aliases when Vide is enabled", async () => {

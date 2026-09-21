@@ -632,8 +632,13 @@ function computePropValidationDiagnostics(
         // leaving the user to wonder why a property they can see in
         // the Roblox docs is "unknown".
         if (entry.key === "Parent" && framework && !framework.parentAsProp) {
+          const label = framework.id === "roact"
+            ? "Roact"
+            : framework.id === "react"
+              ? "React"
+              : framework.id;
           msg = `Unknown property \`Parent\` on \`${call.className}\`. ${
-            framework.id === "roact" ? "Roact" : "React"
+            label
           } mounts through a root or portal instead of a \`Parent\` key.`;
         }
         const d = new vscode.Diagnostic(
