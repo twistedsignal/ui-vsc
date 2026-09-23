@@ -3,7 +3,7 @@ import { buildCodeMask, findEnclosingPropsCall } from "./parser";
 import { flattenClassEvents, flattenClassProps } from "./data";
 import {
   FrameworkId,
-  findFrameworkForAlias,
+  aliasUsesInlineChildren,
   getAliasPartition,
 } from "./frameworks";
 import {
@@ -1329,11 +1329,6 @@ export class ElementSnippetCompletionProvider
     const atKey = enclosing
       ? isAtPropKeyPosition(document, position)
       : false;
-    const enclosingFw =
-      enclosing && enclosing.alias
-        ? findFrameworkForAlias(enclosing.alias)
-        : undefined;
-
     // Active framework for this document — detected per-file in 1.5+
     // (previously every enabled framework's snippets surfaced
     // simultaneously, polluting the dropdown). Hooks / scaffold /
@@ -1447,7 +1442,7 @@ export class ElementSnippetCompletionProvider
           if (
             enclosing &&
             atKey &&
-            (!enclosingFw || enclosingFw.childrenLayout !== "inline")
+            (!enclosing.alias || !aliasUsesInlineChildren(enclosing.alias))
           ) {
             allowed = false;
             break;

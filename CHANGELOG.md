@@ -4,6 +4,16 @@ All notable changes to **Luix** will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.5.6]
+
+### Nested children in UI create wrappers
+
+Configured twistedsignal/ui constructor wrappers now treat positional nested
+`create(...)` calls in the binding table as children. Nested calls receive
+class and property completion and participate in symbols, call trees, and
+other tree-aware editor features. `ui.bind(...)` keeps its existing named-child
+table behavior.
+
 ## [1.5.5]
 
 ### Parent bindings in twistedsignal/ui

@@ -2,7 +2,7 @@
   "name": "ui-vsc",
   "displayName": "ui-vsc",
   "description": "VS Code tooling for twistedsignal/ui, with Roblox property and event completions, diagnostics, previews, and snippets.",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "publisher": "twistedsignal",
   "icon": "assets/icon.png",
   "author": {
@@ -336,7 +336,7 @@
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Opt into parens-style wrappers that create an Instance and pass a twistedsignal/ui binding table, such as `create(\"Highlight\", { Adornee = target })`. Luix provides class-name, property, and event completions for these calls. This setting is ignored while `vide` is enabled in `#luix.frameworks#`, because Vide owns the same `create` alias."
+          "markdownDescription": "Opt into parens-style wrappers that create an Instance and pass a twistedsignal/ui binding table, such as `create(\"Highlight\", { Adornee = target })`. Luix provides class-name, property, and event completions for these calls, including nested `create(...)` results stored as positional binding-table entries. This setting is ignored while `vide` is enabled in `#luix.frameworks#`, because Vide owns the same `create` alias."
         },
         "luix.vide.directInstanceCalls": {
           "type": "boolean",

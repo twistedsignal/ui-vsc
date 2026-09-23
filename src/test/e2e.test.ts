@@ -765,6 +765,26 @@ suite("e2e completion — twistedsignal/ui create wrappers", () => {
     assert.deepStrictEqual(unknownPropKeys(diagnostics), []);
   });
 
+  test("offers class completion for nested create results", async () => {
+    const source = [
+      'create("Frame", {',
+      '  create("Text|"),',
+      "})",
+    ].join("\n");
+    const cursor = source.indexOf("|");
+    const content = source.replace("|", "");
+    const doc = await openLuau(content);
+    const list = await vscode.commands.executeCommand<vscode.CompletionList>(
+      "vscode.executeCompletionItemProvider",
+      doc.uri,
+      doc.positionAt(cursor)
+    );
+    const textLabel = (list?.items ?? []).find(
+      (item) => labelOf(item) === "TextLabel" && item.detail === "Roblox class"
+    );
+    assert.ok(textLabel, "nested create should offer Roblox class names");
+  });
+
   test("ignores ui create aliases when Vide is enabled", async () => {
     await updateLuixSetting("frameworks", ["vide", "ui"]);
     await updateLuixSetting("ui.createAliases", ["make"]);

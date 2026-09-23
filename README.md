@@ -232,6 +232,25 @@ as creatable. For example, `create("Part", { ... })` completes writable
 Hidden, read-only, deprecated, and non-scriptable properties stay out of the
 list.
 
+The wrapper may also place nested `create(...)` results directly in the
+binding table:
+
+```lua
+create("Frame", {
+    BackgroundTransparency = 1,
+
+    create("TextLabel", {
+        Text = "Child",
+    }),
+})
+```
+
+Luix treats those positional calls as children for nested class completion,
+property completion, symbols, and tree-aware editor features. Keep child calls
+after keyed properties. When the last table expression returns both the child
+Instance and its cleanup function, Luau preserves both return values for the
+wrapper to collect.
+
 ### Curried calls: every spelling works
 
 The table shows each framework's canonical shape, but the curried

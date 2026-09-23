@@ -24,6 +24,8 @@ export interface FrameworkSpec {
   aliases: string[];
   /** Optional parens-style wrappers that construct an Instance before binding it. */
   constructorAliases?: string[];
+  /** How configured constructor wrappers place children in their bindings table. */
+  constructorChildrenLayout?: "inline";
   /**
    * Canonical call shape — what the framework's own documentation
    * uses, and what Luix emits when generating snippet bodies /
@@ -113,6 +115,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkSpec> = {
     eventsAsProps: true,
     parentAsProp: true,
     bindsExistingInstance: true,
+    constructorChildrenLayout: "inline",
   },
 };
 
@@ -246,6 +249,12 @@ export function getAliasPartition(): AliasPartition {
       if (!parens.includes(alias)) {
         parens.push(alias);
       }
+      if (
+        framework.constructorChildrenLayout === "inline" &&
+        !parensWithInlineChildren.includes(alias)
+      ) {
+        parensWithInlineChildren.push(alias);
+      }
     }
     // Only frameworks whose parens form actually carries inline
     // children (Vide) qualify — scoping by the spec, not just bucket
@@ -272,6 +281,18 @@ export function getAliasPartition(): AliasPartition {
     bindingAliases,
   };
   return _aliasPartition;
+}
+
+/** Whether this exact alias accepts array-style children in its props table. */
+export function aliasUsesInlineChildren(alias: string): boolean {
+  const framework = findFrameworkForAlias(alias);
+  if (!framework) {
+    return false;
+  }
+  if (framework.constructorAliases?.includes(alias)) {
+    return framework.constructorChildrenLayout === "inline";
+  }
+  return framework.childrenLayout === "inline";
 }
 
 /**

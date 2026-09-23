@@ -19,6 +19,7 @@ import {
 } from "./parser";
 import {
   FRAMEWORKS,
+  aliasUsesInlineChildren,
   findFrameworkForAlias,
   getAliasPartition,
   getEnabledFrameworks,
@@ -403,10 +404,7 @@ export class ClassNameCompletionProvider
         outer &&
         isAtPropKeyPosition(document, document.positionAt(aliasOffset))
       ) {
-        const outerFw = outer.alias
-          ? findFrameworkForAlias(outer.alias)
-          : undefined;
-        if (!outerFw || outerFw.childrenLayout !== "inline") {
+        if (!outer.alias || !aliasUsesInlineChildren(outer.alias)) {
           return undefined;
         }
       }
@@ -655,10 +653,7 @@ export class FactoryOpenParenCompletionProvider
       outer &&
       isAtPropKeyPosition(document, document.positionAt(aliasOffset))
     ) {
-      const outerFw = outer.alias
-        ? findFrameworkForAlias(outer.alias)
-        : undefined;
-      if (!outerFw || outerFw.childrenLayout !== "inline") {
+      if (!outer.alias || !aliasUsesInlineChildren(outer.alias)) {
         return undefined;
       }
     }
@@ -810,10 +805,7 @@ export class FactoryComponentCompletionProvider
       this.workspaceIndex.knownDirectCallTargets()
     );
     if (enclosing && isAtPropKeyPosition(document, position)) {
-      const framework = enclosing.alias
-        ? findFrameworkForAlias(enclosing.alias)
-        : undefined;
-      if (!framework || framework.childrenLayout !== "inline") {
+      if (!enclosing.alias || !aliasUsesInlineChildren(enclosing.alias)) {
         return undefined;
       }
     }

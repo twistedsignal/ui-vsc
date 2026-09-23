@@ -116,6 +116,39 @@ suite("findEnclosingPropsCall", () => {
     assert.strictEqual(result?.isStringLiteralName, true);
   });
 
+  test("nests create results inside a ui constructor binding table", () => {
+    const partition = {
+      parens: ["ui.bind", "create"],
+      curried: [],
+      bindingAliases: ["ui.bind"],
+      parensWithInlineChildren: ["create"],
+    };
+    const text = [
+      'create("Frame", {',
+      "  BackgroundTransparency = 1,",
+      '  create("TextLabel", { Text = "Child" }),',
+      "})",
+    ].join("\n");
+    const calls = findAllCreateElementCalls(text, partition);
+    const tree = buildCallTree(calls);
+    assert.strictEqual(tree.length, 1);
+    assert.strictEqual(tree[0].call.className, "Frame");
+    assert.strictEqual(tree[0].children.length, 1);
+    assert.strictEqual(tree[0].children[0].call.className, "TextLabel");
+  });
+
+  test("does not treat positional calls in ui.bind as constructor children", () => {
+    const partition = {
+      parens: ["ui.bind", "create"],
+      curried: [],
+      bindingAliases: ["ui.bind"],
+      parensWithInlineChildren: ["create"],
+    };
+    const text = 'ui.bind(frame, { create("TextLabel", {}) })';
+    const calls = findAllCreateElementCalls(text, partition);
+    assert.strictEqual(buildCallTree(calls).length, 2);
+  });
+
   test("detects simple e(\"Frame\", { ... }) call", () => {
     const result = detect(`e("Frame", { | })`);
     assert.strictEqual(result?.className, "Frame");
