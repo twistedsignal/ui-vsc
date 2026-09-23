@@ -4,6 +4,15 @@ All notable changes to **Luix** will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.5.7]
+
+### Extension-host hang on malformed tables
+
+The property scanner now guarantees forward progress when incomplete code or a
+recovered call range contains an unmatched closing delimiter. Previously it
+could spin at the same character indefinitely, consume an extension-host CPU
+core, and make VS Code kill the shared host running ui-vsc and Luau LSP.
+
 ## [1.5.6]
 
 ### Nested children in UI create wrappers

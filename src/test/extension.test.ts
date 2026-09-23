@@ -272,6 +272,20 @@ e("Frame", {
   });
 });
 
+suite("extractPropEntries malformed input", () => {
+  test("makes progress past an unmatched closing brace", () => {
+    const entries = extractPropEntries("Name = value}");
+    assert.deepStrictEqual(entries.map((entry) => entry.key), ["Name"]);
+  });
+
+  test("makes progress past unmatched closing parens and brackets", () => {
+    const entries = extractPropEntries(
+      'create("Frame", {})]) Name = "after",'
+    );
+    assert.deepStrictEqual(entries.map((entry) => entry.key), ["Name"]);
+  });
+});
+
 suite("Default props map", () => {
   test("contains Frame with BackgroundColor3", () => {
     assert.ok(_internal.defaultPropsMap.Frame.includes("BackgroundColor3"));

@@ -1022,7 +1022,13 @@ function parsePropEntriesFromMasked(masked: string): PropEntry[] {
     if (!/[A-Za-z_]/.test(masked[i])) {
       // Could be a positional value (Vide inline child, `e(...)`,
       // `local …` block, etc.). Skip the value expression and move on.
-      i = skipValueExpression(masked, i);
+      const next = skipValueExpression(masked, i);
+      // An unmatched closing delimiter makes skipValueExpression stop at
+      // its starting offset. This occurs routinely while the user is typing
+      // and can also happen when a recovered call range ends at an outer
+      // table's delimiter. Always advance so malformed code cannot pin the
+      // shared VS Code extension host in a tight loop.
+      i = next > i ? next : i + 1;
       continue;
     }
     const keyStart = i;
