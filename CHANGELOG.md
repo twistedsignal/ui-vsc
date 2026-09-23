@@ -4,6 +4,16 @@ All notable changes to **Luix** will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.5.8]
+
+### Luau const function components
+
+Component discovery now recognises `const function` declarations. A typed
+helper such as `const function labelComponent(props: props)` gets its declared
+props and the properties of its returned Roblox instance at call sites. The
+returned `create("TextLabel", { ... })` call still produces its normal
+`TextLabel (Name)` inlay hint.
+
 ## [1.5.7]
 
 ### Extension-host hang on malformed tables

@@ -656,6 +656,38 @@ suite("scanDocument — function discovery", () => {
     assert.ok(result.has("Foo"));
   });
 
+  test("discovers a Luau `const function` component", () => {
+    const partition = {
+      parens: ["ui.bind", "create"],
+      curried: [],
+      bindingAliases: ["ui.bind"],
+      parensWithInlineChildren: ["create"],
+    };
+    const text = [
+      "type props = { Name: string, Text: string, PositionY: number }",
+      "const function labelComponent(props: props)",
+      '  return create("TextLabel", { Name = props.Name, Text = props.Text })',
+      "end",
+    ].join("\n");
+    const info = scanDocument(text, partition).get("labelComponent");
+    assert.deepStrictEqual(info?.paramTypeFields, [
+      "Name",
+      "Text",
+      "PositionY",
+    ]);
+    assert.strictEqual(info?.detectedBase, "TextLabel");
+
+    const callText = `${text}\nlabelComponent({ | })`;
+    const cursor = callText.indexOf("|");
+    const detected = findEnclosingPropsCall(
+      callText.replace("|", ""),
+      cursor,
+      partition,
+      new Set(["labelComponent"])
+    );
+    assert.strictEqual(detected?.className, "labelComponent");
+  });
+
   test("discovers a `local X = function` definition", () => {
     const text = `local Bar = function(props) return e("TextLabel", {}) end`;
     const result = scanDocument(text, ALIASES);

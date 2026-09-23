@@ -785,6 +785,38 @@ suite("e2e completion — twistedsignal/ui create wrappers", () => {
     assert.ok(textLabel, "nested create should offer Roblox class names");
   });
 
+  test("completes props and host properties for const function components", async () => {
+    const items = await luixCompletions(
+      [
+        "type props = {",
+        "  Name: string,",
+        "  Text: string,",
+        "  PositionY: number,",
+        "  Color: Color3?,",
+        "}",
+        "const function labelComponent(props: props)",
+        '  return create("TextLabel", {',
+        "    Name = props.Name,",
+        "    Text = props.Text,",
+        "  })",
+        "end",
+        "labelComponent({",
+        "  |",
+        "})",
+      ].join("\n"),
+      "labelComponent"
+    );
+    const labels = new Set(items.map(labelOf));
+    assert.ok(labels.has("Name"));
+    assert.ok(labels.has("Text"));
+    assert.ok(labels.has("PositionY"));
+    assert.ok(labels.has("Color"));
+    assert.ok(
+      labels.has("FontFace"),
+      "TextLabel host props should remain available"
+    );
+  });
+
   test("ignores ui create aliases when Vide is enabled", async () => {
     await updateLuixSetting("frameworks", ["vide", "ui"]);
     await updateLuixSetting("ui.createAliases", ["make"]);

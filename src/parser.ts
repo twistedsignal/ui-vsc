@@ -1637,7 +1637,7 @@ function findFunctionDefinitions(maskedText: string): FunctionDef[] {
   const results: FunctionDef[] = [];
 
   const p1 =
-    /(?<![A-Za-z0-9_])(?:local\s+)?function\s+([A-Za-z_][A-Za-z0-9_.]*)\s*\(/g;
+    /(?<![A-Za-z0-9_])(?:(?:local|const)\s+)?function\s+([A-Za-z_][A-Za-z0-9_.]*)\s*\(/g;
   const p2 =
     /(?<![A-Za-z0-9_])local\s+([A-Za-z_]\w*)\s*=\s*function\s*\(/g;
 

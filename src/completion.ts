@@ -87,7 +87,15 @@ export class ReactLuauPropsCompletionProvider
     // (which is how this used to work — the React.Event fast-path
     // re-detected after falling through) was a real cost on big files.
     const aliases = getAliasPartition();
-    const directTargets = this.workspaceIndex.knownDirectCallTargets();
+    // The workspace index is eventually consistent for unsaved edits. Merge
+    // components from the current buffer so a function declared moments ago
+    // can immediately receive direct-call prop completions.
+    const directTargets = new Set(
+      this.workspaceIndex.knownDirectCallTargets()
+    );
+    for (const name of scanDocument(text, aliases).keys()) {
+      directTargets.add(name);
+    }
     const detected = findEnclosingPropsCall(
       text,
       cursorOffset,
