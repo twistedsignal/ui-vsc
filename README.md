@@ -113,8 +113,7 @@ further down.
 - **Prop validation diagnostics** — unknown prop on a host class
   (with did-you-mean), duplicate key, wrong enum type, prop hardcoded
   in a custom component, missing `AnchorPoint`, missing `RichText`,
-  numeric-range warnings (`Transparency = 1.5`), `TextScaled` gotcha
-  (collapses to zero without a fixed-offset `Size`), deprecated
+  numeric-range warnings (`Transparency = 1.5`), deprecated
   `Font = Enum.Font.X`, typo-d `TextColor`. Optional WCAG-AA
   **color-contrast** warnings (`luix.contrastWarnings.enabled`).
 - **Unused-prop diagnostic** — props declared on a component but
@@ -889,10 +888,6 @@ Yellow squigglies, one-click fixes:
   classic "why isn't my element centered?" bug at the source.
 - **Numeric-range warnings** — `Transparency = 1.5`,
   `Rotation = 720`, `BorderSizePixel = 100`, etc. Per-prop bounds.
-- **`TextScaled` gotcha** — `TextScaled = true` with a pure-scale
-  `Size` (or no `Size`) collapses text to zero; flagged with a clear
-  explanation.
-
 **Unused-prop diagnostic** (`luix.unusedProps.enabled`, default `true`):
 
 - Props declared in a component's parameter type

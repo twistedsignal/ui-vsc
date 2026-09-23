@@ -2,7 +2,7 @@
   "name": "ui-vsc",
   "displayName": "ui-vsc",
   "description": "VS Code tooling for twistedsignal/ui, with Roblox property and event completions, diagnostics, previews, and snippets.",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "publisher": "twistedsignal",
   "icon": "assets/icon.png",
   "author": {

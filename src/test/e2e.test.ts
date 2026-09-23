@@ -785,6 +785,22 @@ suite("e2e completion — twistedsignal/ui create wrappers", () => {
     assert.ok(textLabel, "nested create should offer Roblox class names");
   });
 
+  test("does not warn about TextScaled with a pure-scale Size", async () => {
+    const diagnostics = await luixDiagnostics(
+      [
+        'create("TextLabel", {',
+        "  TextScaled = true,",
+        "  Size = UDim2.fromScale(1, 1),",
+        "})",
+      ].join("\n")
+    );
+    assert.ok(
+      diagnostics.every(
+        (diagnostic) => diagnostic.code !== "luix.text-scaled-gotcha"
+      )
+    );
+  });
+
   test("completes props and host properties for const function components", async () => {
     const items = await luixCompletions(
       [

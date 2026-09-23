@@ -39,7 +39,6 @@ export const DIAGNOSTIC_CODE = {
   MissingRichText: "luix.missing-richtext",
   MissingAnchorPoint: "luix.missing-anchorpoint",
   NumericRange: "luix.numeric-range",
-  TextScaledGotcha: "luix.text-scaled-gotcha",
   LowContrast: "luix.low-contrast",
   UnusedProp: "luix.unused-prop",
   CornerRadiusConflict: "luix.corner-radius-conflict",
@@ -675,44 +674,6 @@ function computePropValidationDiagnostics(
       }
     }
 
-    // ---- TextScaled gotcha ----
-    // `TextScaled = true` requires at least one Size axis to be a
-    // fixed pixel offset (or `AutomaticSize` covering the other axis).
-    // When Size is `UDim2.fromScale(...)` only — or missing entirely
-    // — the text auto-scales toward zero and disappears.
-    {
-      const textScaledEntry = entries.find((e) => e.key === "TextScaled");
-      if (textScaledEntry) {
-        const value = propsBody
-          .slice(textScaledEntry.valueStart, textScaledEntry.valueEnd)
-          .trim();
-        if (value === "true") {
-          const sizeEntry = entries.find((e) => e.key === "Size");
-          const sizeValue = sizeEntry
-            ? propsBody
-                .slice(sizeEntry.valueStart, sizeEntry.valueEnd)
-                .trim()
-            : "";
-          if (looksScaleOnly(sizeValue) && !hasAutomaticSize(entries, propsBody)) {
-            const startPos = document.positionAt(
-              bodyStart + textScaledEntry.keyStart
-            );
-            const endPos = document.positionAt(
-              bodyStart + textScaledEntry.keyEnd
-            );
-            const d = new vscode.Diagnostic(
-              new vscode.Range(startPos, endPos),
-              "`TextScaled = true` needs a `Size` with at least one fixed-offset axis (e.g. `UDim2.new(0, X, 0, Y)`) or `AutomaticSize` to render text — pure-scale sizes can collapse to zero.",
-              vscode.DiagnosticSeverity.Warning
-            );
-            d.code = DIAGNOSTIC_CODE.TextScaledGotcha;
-            d.source = "luix";
-            out.push(d);
-          }
-        }
-      }
-    }
-
     // ---- Missing AnchorPoint (Position uses scale 0.5 or 1) ----
     {
       const posEntry = entries.find((e) => e.key === "Position");
@@ -834,35 +795,6 @@ const NUMERIC_RANGES: Record<string, { min: number; max: number }> = {
   ZIndex: { min: -2_000_000, max: 2_000_000 },
   LayoutOrder: { min: -1_000_000, max: 1_000_000 },
 };
-
-function looksScaleOnly(sizeValue: string): boolean {
-  // Empty / missing → also scale-only for our purposes.
-  if (!sizeValue) return true;
-  const e = sizeValue.replace(/\s+/g, "");
-  // `UDim2.fromScale(0.X, 0.Y)` or `(1, 1)` etc. — no offsets at all.
-  if (/^UDim2\.fromScale\([-\d.]+,[-\d.]+\)$/.test(e)) {
-    return true;
-  }
-  // `UDim2.new(s, 0, s, 0)` — explicit zero offsets.
-  const m = /^UDim2\.new\((-?[\d.]+),(-?[\d.]+),(-?[\d.]+),(-?[\d.]+)\)$/.exec(e);
-  if (m) {
-    const xOffset = parseFloat(m[2]);
-    const yOffset = parseFloat(m[4]);
-    return xOffset === 0 && yOffset === 0;
-  }
-  return false;
-}
-
-function hasAutomaticSize(
-  entries: Array<{ key: string; valueStart: number; valueEnd: number }>,
-  body: string
-): boolean {
-  const entry = entries.find((e) => e.key === "AutomaticSize");
-  if (!entry) return false;
-  const v = body.slice(entry.valueStart, entry.valueEnd).trim();
-  // Any non-`None` value covers at least one axis.
-  return !/Enum\.AutomaticSize\.None\b/.test(v);
-}
 
 // ============================================================================
 // Color contrast warnings (WCAG)

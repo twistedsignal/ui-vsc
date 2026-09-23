@@ -4,6 +4,14 @@ All notable changes to **Luix** will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.5.9]
+
+### Removed the TextScaled size warning
+
+ui-vsc no longer warns when `TextScaled = true` is paired with a pure-scale
+`Size` or no explicit `Size`. Roblox supports those layouts, so the warning
+reported valid code as broken.
+
 ## [1.5.8]
 
 ### Luau const function components
@@ -1271,10 +1279,6 @@ to track newer Roblox additions and previously-missing props:
 
 - **Numeric-range warnings** — `Transparency = 1.5`, `Rotation = 720`,
   `BorderSizePixel = 100`, etc. Per-prop bounds.
-- **TextScaled gotcha** — `TextScaled = true` with a pure-scale `Size`
-  (or no `Size`) collapses text to zero — now flagged with a fix
-  recommendation.
-
 ### Color contrast warnings (off by default)
 
 `luix.contrastWarnings.enabled` — flags any `TextColor3` whose
